@@ -1,0 +1,43 @@
+---
+import { site } from '../content/site';
+import { fr } from '../lib/format';
+import { buildPlate } from '../lib/plate';
+
+const p = site.hero.plate;
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const notes = Object.fromEntries(
+  Object.entries(p.notes).map(([id, note]) => [id, { title: fr(note.title), text: fr(note.text) }]),
+);
+const { svg, notes: placed } = buildPlate(notes, {
+  street: fr(p.labels.street),
+  zoneU: p.labels.zoneU,
+  zoneN: p.labels.zoneN,
+  title: esc(fr(p.drawingTitle)),
+});
+---
+
+<figure class="plate" data-plate aria-labelledby="plate-caption">
+  <figcaption class="plate__head" id="plate-caption">
+    <span class="plate__title">{fr(p.title)}</span>
+    <span class="plate__subtitle">{fr(p.subtitle)}</span>
+    <span class="plate__stamp">{fr(p.stamp)}</span>
+  </figcaption>
+  <div class="plate__canvas">
+    <div class="plate__art">
+      <Fragment set:html={svg} />
+    </div>
+    <ol class="plate__notes">
+      {
+        placed.map((note) => (
+          <li class={`note note--${note.side}`} style={`--x:${note.x};--y:${note.y};--w:${note.w};--n:${note.n}`}>
+            <span class="note__n" aria-hidden="true">
+              {note.n}
+            </span>
+            <span class="note__title">{notes[note.id].title}</span>
+            <span class="note__text">{notes[note.id].text}</span>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</figure>

@@ -54,7 +54,7 @@ export const site = {
 
   // ---------------------------------------------------------------- PL 01 — Hero
   hero: {
-    sheet: { number: '01', title: 'Enveloppe constructible' },
+    sheet: { number: '01', title: 'Lecture réglementaire' },
     overline: 'Études de faisabilité réglementaire',
     title: "Savoir ce qu'un terrain permet *vraiment*, avant de signer.",
     audience: {
@@ -70,55 +70,105 @@ export const site = {
     },
     secondaryCta: { label: 'Voir le cas illustratif', href: '#cas' },
 
-    simulator: {
-      label: 'Simulateur',
-      instruction: 'Faites varier les règles, le volume se recalcule.',
-      hint: 'Faites varier les règles',
-      rulesTitle: 'Règles de la zone',
-      zoneName: 'UB fictive',
-      rules: {
-        recul: { label: 'Recul par rapport à la voie', unit: 'm', spoken: 'mètres' },
-        emprise: { label: 'Emprise au sol maximale', unit: '%', spoken: 'pour cent du terrain' },
-        hauteur: { label: 'Hauteur maximale', unit: 'm', spoken: 'mètres' },
-        pleineTerre: { label: 'Pleine terre minimale', unit: '%', spoken: 'pour cent du terrain' },
-      },
-      derived: { label: 'Retrait des limites séparatives', formula: 'L ≥ H/2, min. 3 m' },
-      results: {
-        title: 'Capacité estimée',
-        logements: 'logements',
-        emprise: 'Emprise bâtie',
-        niveaux: 'Niveaux',
-        sdp: 'Surface de plancher',
-        pleineTerre: 'Pleine terre exigée',
-        binding: 'Règle déterminante',
-        bindingLabels: {
-          zone: 'les reculs et retraits',
-          emprise: "l'emprise au sol",
-          pleineTerre: 'la pleine terre',
-        },
-        bindingFlag: 'déterminante',
-        lost: 'gabarit perdu',
-      },
-      hypothesesTitle: 'Hypothèses de calcul',
-      hypotheses:
-        '3 m par niveau · surface de plancher = 85 % de la surface bâtie · 75 m² de surface de plancher par logement · 15 % du terrain pour les accès et le stationnement.',
-      disclaimer: 'Simulation illustrative',
-      disclaimerLong:
-        'Parcelle fictive et règles simplifiées. Une étude réelle intègre le règlement complet, les OAP, les servitudes, les risques et le contexte local.',
-      drawing: {
-        title: "Axonométrie d'une parcelle fictive de 3 000 m² et de son enveloppe constructible",
-        parcel: 'Parcelle fictive · 3 000 m²',
+    // Planche annotée : chaque note explique une contrainte visible sur le dessin.
+    // Parcelle, règles et valeurs fictives. L'ordre et les numéros sont calculés
+    // d'après la position des repères sur le dessin (voir src/lib/plate.ts).
+    plate: {
+      title: 'Lecture réglementaire d’une parcelle',
+      subtitle: '21 contraintes qui dessinent un projet',
+      stamp: 'Planche illustrative · parcelle, règles et valeurs fictives',
+      drawingTitle:
+        'Axonométrie d’un immeuble de 30 logements sur une parcelle fictive de 3 000 m², annotée des contraintes réglementaires qui l’ont façonné.',
+      labels: {
         street: 'Voie publique',
-        gabarit: 'niveau incomplet',
+        zoneU: 'UBa',
+        zoneN: 'N',
+        networks: 'AEP · EU · ÉLEC',
       },
-      legend: {
-        title: 'Légende',
-        items: {
-          retraits: 'Reculs et retraits imposés',
-          zone: "Zone d'implantation",
-          volume: 'Volume constructible',
-          pleineTerre: 'Pleine terre (arbres conservés)',
-          existant: 'Existant : voirie, bâti voisin',
+      notes: {
+        zonage: {
+          title: 'Zonage',
+          text: 'Zone UBa, et zone naturelle N au-delà de la limite arrière. Chaque sous-secteur a ses propres règles.',
+        },
+        destination: {
+          title: 'Destination',
+          text: 'Logement autorisé, commerce admis en rez-de-chaussée sur rue : le programme mixte est possible.',
+        },
+        hauteur: {
+          title: 'Hauteur maximale',
+          text: '12 m à l’acrotère, 15 m pour l’attique en retrait : R+3 et attique, pas un niveau de plus.',
+        },
+        emprise: {
+          title: 'Emprise au sol',
+          text: '635 m² bâtis, soit 21 % du terrain pour un maximum autorisé de 30 %.',
+        },
+        implantation: {
+          title: 'Implantation sur rue',
+          text: 'Recul de 5 m compté depuis l’alignement futur : tout le plan masse se cale sur cette ligne.',
+        },
+        limites: {
+          title: 'Limites séparatives',
+          text: 'Prospect L ≥ H/2 : 6 m de retrait pour 12 m de façade. Plus haut, il faudrait s’éloigner.',
+        },
+        stationnement: {
+          title: 'Stationnement',
+          text: '1 place par logement, 0,5 en social : 26 places, dont 20 en sous-sol. Local vélos de 45 m².',
+        },
+        acces: {
+          title: 'Accès et voirie',
+          text: 'Un accès unique de 5 m, avec visibilité dégagée et passage des secours : il organise toute la parcelle.',
+        },
+        aspect: {
+          title: 'Aspect architectural',
+          text: 'Attique en retrait de 2 m, toiture-terrasse, enduit et bois. Clôture : muret de 0,60 m et grille.',
+        },
+        espacesVerts: {
+          title: 'Espaces verts',
+          text: '30 % de pleine terre, soit 900 m², et 1 arbre pour 100 m² : 9 arbres à planter.',
+        },
+        biotope: {
+          title: 'Coefficient de biotope',
+          text: 'Coefficient de 0,4 atteint par la toiture végétalisée de l’aile et les places en dalles engazonnées.',
+        },
+        eauxPluviales: {
+          title: 'Eaux pluviales',
+          text: 'Infiltration à la parcelle : une noue longe l’accès, le débit de fuite vers le réseau est limité.',
+        },
+        reseaux: {
+          title: 'Réseaux',
+          text: 'Eau potable, eaux usées et électricité sous la voie : raccordements directs, sans extension à financer.',
+        },
+        oap: {
+          title: 'OAP',
+          text: 'L’OAP du secteur impose une liaison piétonne vers le quartier nord, le long de la limite ouest.',
+        },
+        mixite: {
+          title: 'Mixité sociale',
+          text: '25 % de logements sociaux au-delà de 12 logements : 8 sur 30, regroupés dans la cage ouest.',
+        },
+        emplacementReserve: {
+          title: 'Emplacement réservé',
+          text: 'Bande de 2 m réservée à l’élargissement de la voie : à céder, et à déduire de la surface utile.',
+        },
+        monument: {
+          title: 'Abords de monument historique',
+          text: 'Parcelle dans les abords d’une église classée : l’avis de l’Architecte des Bâtiments de France s’impose.',
+        },
+        risques: {
+          title: 'Risque inondation',
+          text: 'Zone bleue du plan de prévention : premier plancher 0,60 m au-dessus de la cote de référence.',
+        },
+        archeologie: {
+          title: 'Archéologie préventive',
+          text: 'Zone de présomption de prescription : un diagnostic peut être exigé. Le délai se prévoit dès l’offre.',
+        },
+        bruit: {
+          title: 'Bruit',
+          text: 'Voie classée au titre du bruit : isolation acoustique renforcée des façades sur rue.',
+        },
+        patrimoine: {
+          title: 'Arbre protégé',
+          text: 'Chêne repéré au PLU comme élément de paysage : conservé, avec un périmètre de protection du houppier.',
         },
       },
     },
