@@ -1,0 +1,255 @@
+---
+import { site } from '../content/site';
+import { fr, rich, formatCote, formatInt, formatNiveaux } from '../lib/format';
+import {
+  buildScene,
+  computeEnvelope,
+  defsMarkup,
+  sceneMarkup,
+  ruleSpoken,
+  ruleValue,
+  rulerTicks,
+  DEFAULT_RULES,
+  RULE_KEYS,
+  RULE_LIMITS,
+  PROJECTIONS,
+  viewBoxAttr,
+} from '../lib/envelope';
+
+const h = site.hero;
+const s = h.simulator;
+
+// Rendu serveur à l'échelle « bureau » ; le script recale traits et textes à la taille réelle.
+const U0 = 1.6;
+const env = computeEnvelope(DEFAULT_RULES);
+const labels = {
+  street: fr(s.drawing.street),
+  parcel: fr(s.drawing.parcel),
+  gabarit: fr(s.drawing.gabarit),
+};
+const bindingLabels = Object.fromEntries(
+  Object.entries(s.results.bindingLabels).map(([k, v]) => [k, fr(v)]),
+);
+const units = Object.fromEntries(RULE_KEYS.map((k) => [k, s.rules[k].spoken]));
+
+const summary = (e: typeof env) =>
+  `Environ ${e.logements} logements : emprise bâtie de ${formatInt(e.surfaceEmprise)} mètres carrés, ${e.niveaux} niveaux. Règle déterminante : ${bindingLabels[e.binding]}.`;
+
+const scene = buildScene(DEFAULT_RULES, U0, labels, env);
+// Rendu serveur en isométrie (mobile d'abord) ; le script bascule en planométrie dans un cadre en hauteur.
+const svg = `<svg viewBox="${viewBoxAttr(PROJECTIONS.iso.viewBox)}" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="axo-title axo-desc" xmlns="http://www.w3.org/2000/svg"><title id="axo-title">${fr(s.drawing.title)}</title><desc id="axo-desc">${summary(env)}</desc>${defsMarkup(U0)}${sceneMarkup(scene)}</svg>`;
+
+const sdp = (v: number) => `≈ ${formatInt(Math.round(v / 10) * 10)} m²`;
+---
+
+<section
+  class="hero"
+  id="enveloppe"
+  aria-labelledby="hero-title"
+  data-hero
+  data-labels={JSON.stringify(labels)}
+  data-binding={JSON.stringify(bindingLabels)}
+  data-units={JSON.stringify(units)}
+  data-lost={fr(s.results.lost)}
+>
+  <div class="hero__head">
+    <p class="overline">
+      <span class="overline__sheet">PL {h.sheet.number}</span>
+      <span>{fr(h.overline)}</span>
+    </p>
+    <h1 id="hero-title" set:html={rich(h.title)} />
+    <p class="audience">
+      <span class="visually-hidden">{fr(h.audience.label)} : </span>
+      {
+        h.audience.items.map((item, i) => (
+          <Fragment>
+            <span class="audience__item">{item}</span>
+            {i < h.audience.items.length - 1 && (
+              <span class="audience__sep" aria-hidden="true">
+                {' · '}
+              </span>
+            )}
+          </Fragment>
+        ))
+      }
+    </p>
+  </div>
+
+  <div class="hero__sim">
+    <figure class="hero__figure">
+      <div class="axo-frame">
+        <div class="axo">
+          <Fragment set:html={svg} />
+        </div>
+        <p class="axo__stamp">{s.disclaimer}</p>
+        <p class="axo__hint" aria-hidden="true">{fr(s.hint)} <span>→</span></p>
+      </div>
+      <div class="readout" aria-hidden="true">
+        <p class="readout__main">
+          <span class="readout__approx">≈</span>
+          <span class="readout__value" data-out="logements">{env.logements}</span>
+          <span class="readout__unit">{s.results.logements}</span>
+        </p>
+        <p class="readout__meta">
+          <span><span data-out="niveaux">{formatNiveaux(env.niveaux)}</span> · <span data-out="emprise">{formatInt(env.surfaceEmprise)} m²</span></span>
+          <span class="readout__stamp">{s.disclaimer}</span>
+        </p>
+      </div>
+      <figcaption class="visually-hidden">
+        {fr(s.legend.title)} : {fr(s.legend.items.retraits)} (hachures terracotta) ; {fr(s.legend.items.zone)} (tirets verts) ; {fr(s.legend.items.volume)} (volume vert) ; {fr(s.legend.items.pleineTerre)} (arbres) ; {fr(s.legend.items.existant)}.
+      </figcaption>
+    </figure>
+
+    <div class="hero__panel">
+      <fieldset class="hero__rules rules">
+        <legend class="rules__title">
+          {fr(s.rulesTitle)}&nbsp;<b>{fr(s.zoneName)}</b>
+        </legend>
+        <p class="rules__hint">{fr(s.instruction)}</p>
+        <div class="rules__grid">
+        {
+          RULE_KEYS.map((key) => {
+            const lim = RULE_LIMITS[key];
+            const v = DEFAULT_RULES[key];
+            const ticks = rulerTicks(key);
+            return (
+              <div class="rule" data-rule={key}>
+                <div class="rule__head">
+                  <label for={`rule-${key}`}>
+                    {fr(s.rules[key].label)}
+                    <span class="rule__flag" data-flag hidden>{fr(s.results.bindingFlag)}</span>
+                  </label>
+                  <output for={`rule-${key}`} data-out={`rule-${key}`}>
+                    {ruleValue(key, v)}
+                  </output>
+                </div>
+                <div class="ruler" data-ruler>
+                  <div class="ruler__scale" aria-hidden="true">
+                    <svg viewBox="0 0 100 12" preserveAspectRatio="none">
+                      <line x1="0" y1="0" x2="100" y2="0" />
+                      {ticks.map((t) => (
+                        <line class={t.major ? 'major' : 'minor'} x1={t.x} x2={t.x} y1="0" y2={t.major ? 9 : 4.5} />
+                      ))}
+                    </svg>
+                    <div class="ruler__labels">
+                      <span>{`${lim.min} ${s.rules[key].unit}`}</span>
+                      <span>{`${lim.max} ${s.rules[key].unit}`}</span>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    id={`rule-${key}`}
+                    name={key}
+                    min={lim.min}
+                    max={lim.max}
+                    step={lim.step}
+                    value={v}
+                    aria-valuetext={ruleSpoken(key, v, s.rules[key].spoken)}
+                  />
+                </div>
+              </div>
+            );
+          })
+        }
+        </div>
+        <div class="rule--derived" data-rule="retrait">
+          <span class="rule--derived__label">{fr(s.derived.label)}</span>
+          <span class="rule--derived__formula">{s.derived.formula}</span>
+          <output data-out="retrait">L = {formatCote(env.retrait)} m</output>
+        </div>
+      </fieldset>
+
+      <div class="hero__cartouche">
+        <dl class="cartouche">
+          <div class="cartouche__cell cartouche__cell--main">
+            <dt class="cartouche__label">{fr(s.results.title)}</dt>
+            <dd class="capacity">
+              <span class="capacity__approx" aria-hidden="true">≈</span>
+              <span class="capacity__value" data-out="logements">{env.logements}</span>
+              <span class="capacity__unit">{s.results.logements}</span>
+            </dd>
+          </div>
+          <div class="cartouche__cell cartouche__cell--l">
+            <dt class="cartouche__label">{fr(s.results.emprise)}</dt>
+            <dd class="cartouche__value" data-out="emprise">{formatInt(env.surfaceEmprise)} m²</dd>
+          </div>
+          <div class="cartouche__cell">
+            <dt class="cartouche__label">{fr(s.results.niveaux)}</dt>
+            <dd class="cartouche__value">
+              <span data-out="niveaux">{formatNiveaux(env.niveaux)}</span>
+              <span class="cartouche__note" data-out="perdu" hidden></span>
+            </dd>
+          </div>
+          <div class="cartouche__cell cartouche__cell--l">
+            <dt class="cartouche__label">{fr(s.results.sdp)}</dt>
+            <dd class="cartouche__value" data-out="sdp">{sdp(env.sdp)}</dd>
+          </div>
+          <div class="cartouche__cell cartouche__cell--last">
+            <dt class="cartouche__label">{fr(s.results.pleineTerre)}</dt>
+            <dd class="cartouche__value" data-out="pleineTerre">{formatInt(env.pleineTerreExigee)} m²</dd>
+          </div>
+          <div class="cartouche__cell cartouche__cell--binding">
+            <dt class="cartouche__label">{fr(s.results.binding)}</dt>
+            <dd class="binding" data-out="binding">{bindingLabels[env.binding]}</dd>
+          </div>
+        </dl>
+        <details class="hypotheses">
+          <summary>{fr(s.hypothesesTitle)}</summary>
+          <p>{fr(s.hypotheses)}</p>
+        </details>
+        <p class="cartouche__foot">
+          <span>PL {h.sheet.number} · {fr(h.sheet.title)}</span>
+          <strong>{s.disclaimer}</strong>
+        </p>
+        <p class="visually-hidden" aria-live="polite" data-live></p>
+      </div>
+    </div>
+
+    <ul class="legend hero__legend" aria-hidden="true">
+      <li>
+        <svg viewBox="0 0 22 12" aria-hidden="true">
+          <ellipse cx="11" cy="6" rx="8" ry="4.6" fill="rgba(47,95,79,.07)" stroke="var(--green-line)"></ellipse>
+          <circle cx="11" cy="6" r="1.2" fill="var(--green-line)"></circle>
+        </svg>
+        {fr(s.legend.items.pleineTerre)}
+      </li>
+      <li>
+        <svg viewBox="0 0 22 12" aria-hidden="true">
+          <rect x="0.5" y="0.5" width="21" height="11" fill="none" stroke="var(--terra)" stroke-opacity="0.35"></rect>
+          <path d="M2 11 11 1M8 11l10-10M14 11l7-8" stroke="var(--terra)"></path>
+        </svg>
+        {fr(s.legend.items.retraits)}
+      </li>
+      <li>
+        <svg viewBox="0 0 22 12" aria-hidden="true">
+          <path d="M1 6h20" stroke="var(--green-line)" stroke-dasharray="4 3"></path>
+        </svg>
+        {fr(s.legend.items.zone)}
+      </li>
+      <li>
+        <svg viewBox="0 0 22 12" aria-hidden="true">
+          <rect x="1" y="1" width="20" height="10" fill="var(--green-roof)" stroke="var(--green)" stroke-width="1.5"></rect>
+        </svg>
+        {fr(s.legend.items.volume)}
+      </li>
+    </ul>
+  </div>
+
+  <div class="hero__body">
+    <p class="hero__lead">{fr(h.lead)}</p>
+    <div class="hero__ctas">
+      <a class="btn" href={h.primaryCta.href}>
+        {fr(h.primaryCta.label)}
+        <span class="btn__meta">{fr(h.primaryCta.meta)}</span>
+      </a>
+      <a class="link-arrow" href={h.secondaryCta.href}>
+        {fr(h.secondaryCta.label)}
+        <span aria-hidden="true">↓</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<script>
+  import '../scripts/hero';
+</script>

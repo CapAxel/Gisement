@@ -1,0 +1,19 @@
+# build
+dist/
+.astro/
+
+# dépendances
+node_modules/
+
+# environnement
+.env
+.env.*
+!.env.example
+
+# éditeurs / systèmes
+.DS_Store
+.vscode/
+.idea/
+
+# captures de travail
+screenshots/

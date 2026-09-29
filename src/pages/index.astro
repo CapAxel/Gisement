@@ -1,0 +1,22 @@
+---
+import Base from '../layouts/Base.astro';
+import Header from '../components/Header.astro';
+import Hero from '../components/Hero.astro';
+---
+
+<Base>
+  <div class="sheet-wrap">
+    <div class="sheet">
+      <div class="sheet__refs sheet__refs--top" aria-hidden="true">
+        {['A', 'B', 'C', 'D', 'E', 'F'].map((l) => <span>{l}</span>)}
+      </div>
+      <div class="sheet__refs sheet__refs--left" aria-hidden="true">
+        {['1', '2', '3', '4'].map((n) => <span>{n}</span>)}
+      </div>
+      <Header />
+      <main id="contenu">
+        <Hero />
+      </main>
+    </div>
+  </div>
+</Base>
